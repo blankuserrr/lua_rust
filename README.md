@@ -4,7 +4,7 @@
 
 lua syntax parser & runtime interpreter in Rust
 
- - LALR(1), GLR parser
+ - LALR(1), GLR parser with [RustyLR](https://github.com/ehwan/RustyLR)
  - syntax referenced from [lua 5.4 reference manual](https://www.lua.org/manual/5.4/manual.html)
  - ***Greatly in progress***
     - grammar fully implemented

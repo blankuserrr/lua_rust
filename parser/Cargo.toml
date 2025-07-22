@@ -1,6 +1,6 @@
 [package]
 name = "lua_parser"
-version = "0.9.1"
+version = "0.10.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "syntax parser for lua language"
@@ -11,7 +11,7 @@ categories = ["parsing"]
 
 [dependencies]
 rusty_lr = { version = "3.27.0", features = [] }
-lua_tokenizer = { version = "0.4.0", path = "../tokenizer" }
+lua_tokenizer = { version = "0.5.0", path = "../tokenizer" }
 codespan-reporting = { version = "0.12", optional = true }
 
 [features]
