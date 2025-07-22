@@ -102,7 +102,7 @@ pub fn parse_bytes(source: &[u8]) -> Result<Block, ParseError> {
     let parser = parser::ChunkOrExpressionsParser::new();
     let mut context = parser::ChunkOrExpressionsContext::new();
 
-    for token in tokenizer {
+    for token in tokenizer.into_iter() {
         let token = match token {
             Ok(token) => token,
             Err(e) => {
@@ -112,53 +112,46 @@ pub fn parse_bytes(source: &[u8]) -> Result<Block, ParseError> {
 
         match context.feed(&parser, token, &mut ()) {
             Ok(_) => {}
-            Err(err) => match err {
-                parser::ChunkOrExpressionsParseError::NoAction(token) => {
-                    let expected = context.expected(&parser).collect::<Vec<_>>();
-                    let expected_nonterm = context.expected_nonterm(&parser).collect::<Vec<_>>();
-                    let error = InvalidToken {
-                        token: Some(token),
-                        expected,
-                        expected_nonterm,
-                    };
-                    return Err(ParseError::InvalidToken(error));
-                }
-                parser::ChunkOrExpressionsParseError::ReduceAction(reduce_actions) => {
-                    return Err(reduce_actions.into_iter().next().unwrap());
-                }
-            },
-        }
-    }
-    // feed eof
-    let eof_token = lua_tokenizer::Token {
-        token_type: lua_tokenizer::TokenType::Eof,
-        span: Span::new(source.len(), source.len()),
-    };
-    match context.feed(&parser, eof_token, &mut ()) {
-        Ok(_) => {}
-        Err(_) => {
-            let expected = context.expected(&parser).collect::<Vec<_>>();
-            let expected_nonterm = context.expected_nonterm(&parser).collect::<Vec<_>>();
-            let error = InvalidToken {
-                token: None,
-                expected,
-                expected_nonterm,
-            };
-            return Err(ParseError::InvalidToken(error));
+            Err(err) => {
+                let (expected_terms, expected_nonterms) = context.expected_token_str(&parser);
+                let error = InvalidToken {
+                    token: Some(err.term.into_term().unwrap()),
+                    expected: expected_terms.collect(),
+                    expected_nonterm: expected_nonterms.collect(),
+                };
+                return Err(ParseError::InvalidToken(error));
+                // parser::ChunkOrExpressionsParseError::ReduceAction(reduce_actions) => {
+                //     return Err(reduce_actions.into_iter().next().unwrap());
+                // }
+            }
         }
     }
 
     let mut block = None;
 
-    for matched in context.accept() {
-        match matched {
-            ChunkOrExpressions::Chunk(block_) => {
-                if block.is_some() {
-                    return Err(ParseError::Ambiguous);
+    let (expected_terms, expected_nonterms) = context.expected_token_str(&parser);
+    let res = context.accept(&parser, &mut ());
+    match res {
+        Ok(matched) => {
+            for matched in matched {
+                match matched {
+                    ChunkOrExpressions::Chunk(block_) => {
+                        if block.is_some() {
+                            return Err(ParseError::Ambiguous);
+                        }
+                        block = Some(block_);
+                    }
+                    _ => {}
                 }
-                block = Some(block_);
             }
-            _ => {}
+        }
+        Err(_) => {
+            let error = InvalidToken {
+                token: None,
+                expected: expected_terms.collect(),
+                expected_nonterm: expected_nonterms.collect(),
+            };
+            return Err(ParseError::InvalidToken(error));
         }
     }
 

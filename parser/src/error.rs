@@ -58,7 +58,7 @@ pub struct InvalidToken {
     /// expected tokens
     pub expected: Vec<&'static str>,
     /// expected nonterminal tokens
-    pub expected_nonterm: Vec<parser_expanded::ChunkOrExpressionsNonTerminals>,
+    pub expected_nonterm: Vec<&'static str>,
 }
 impl std::fmt::Display for InvalidToken {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -91,7 +91,6 @@ use codespan_reporting::diagnostic::Diagnostic;
 #[cfg(feature = "diag")]
 use codespan_reporting::diagnostic::Label;
 
-use crate::parser_expanded;
 use crate::SpannedString;
 
 impl InvalidToken {

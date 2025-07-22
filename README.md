@@ -15,6 +15,17 @@ lua syntax parser & runtime interpreter in Rust
 
 ## How to use
 
+### As REPL interpreter
+clone this repository and simply run
+```
+$ cargo run <source_file.lua>
+```
+or
+```
+$ cargo run
+```
+will start lua REPL. Note that this executable is not `cargo publish`ed.
+
 ### As Library
 add [`lua_ir`](https://crates.io/crates/lua_ir) crate to your `Cargo.toml`
 ```toml
@@ -35,14 +46,4 @@ let world_value = env.get_global( "var_world" )?;
 env.set_global( "var_hello", 10.into() )?;
 ```
 
-### As REPL interpreter
-clone this repository and simply run
-```
-$ cargo run <source_file.lua>
-```
-or
-```
-$ cargo run
-```
-will start lua REPL. Note that this executable is not `cargo publish`ed.
 

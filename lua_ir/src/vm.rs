@@ -111,26 +111,26 @@ impl LuaEnv {
             }
         }
 
-        if !self.parser_context.as_ref().unwrap().can_feed(
-            &self.parser,
-            &lua_tokenizer::Token::new_type(lua_tokenizer::TokenType::Eof),
-        ) {
+        if !self
+            .parser_context
+            .as_ref()
+            .unwrap()
+            .can_accept(&self.parser)
+        {
             return Ok(());
         }
 
-        self.parser_context
-            .as_mut()
+        let res = self
+            .parser_context
+            .take()
             .unwrap()
-            .feed(
-                &self.parser,
-                lua_tokenizer::Token::new_type(lua_tokenizer::TokenType::Eof),
-                &mut (),
-            )
-            .ok();
+            .accept(&self.parser, &mut ())
+            .ok()
+            .unwrap();
 
         let mut matched_stmt = None;
         let mut matched_expr = None;
-        for m in std::mem::take(&mut self.parser_context).unwrap().accept() {
+        for m in res {
             match m {
                 lua_parser::ChunkOrExpressions::Chunk(chunk) => {
                     if matched_stmt.is_some() {
@@ -220,9 +220,7 @@ impl LuaEnv {
     pub(crate) fn load_chunk(&mut self, source: &[u8]) -> Result<Chunk, RuntimeError> {
         self.parser_context = Some(lua_parser::Context::new());
 
-        for token in lua_tokenizer::Tokenizer::from_bytes(source).chain(std::iter::once(Ok(
-            lua_tokenizer::Token::new_type(lua_tokenizer::TokenType::Eof),
-        ))) {
+        for token in lua_tokenizer::Tokenizer::from_bytes(source) {
             match token {
                 Ok(token) => {
                     match self
@@ -245,34 +243,45 @@ impl LuaEnv {
             }
         }
 
-        let mut matched_stmt = None;
-        for m in std::mem::take(&mut self.parser_context).unwrap().accept() {
-            match m {
-                lua_parser::ChunkOrExpressions::Chunk(chunk) => {
-                    if matched_stmt.is_some() {
-                        return Err(RuntimeError::Custom("ambiguous statement".into()));
+        match self
+            .parser_context
+            .take()
+            .unwrap()
+            .accept(&self.parser, &mut ())
+        {
+            Ok(matched) => {
+                let mut matched_stmt = None;
+                for m in matched {
+                    match m {
+                        lua_parser::ChunkOrExpressions::Chunk(chunk) => {
+                            if matched_stmt.is_some() {
+                                return Err(RuntimeError::Custom("ambiguous statement".into()));
+                            }
+                            matched_stmt = Some(chunk);
+                        }
+                        lua_parser::ChunkOrExpressions::Expressions(_) => {}
                     }
-                    matched_stmt = Some(chunk);
                 }
-                lua_parser::ChunkOrExpressions::Expressions(_) => {}
-            }
-        }
-        if let Some(matched_stmt) = matched_stmt {
-            let mut sem_context = lua_semantics::Context::new();
-            sem_context.begin_scope(false);
-            let processed_block = match sem_context.process_block(matched_stmt, true, false) {
-                Ok(res) => res,
-                Err(err) => {
-                    return Err(RuntimeError::Custom(err.to_string().into()));
-                }
-            };
-            drop(sem_context);
+                if let Some(matched_stmt) = matched_stmt {
+                    let mut sem_context = lua_semantics::Context::new();
+                    sem_context.begin_scope(false);
+                    let processed_block = match sem_context.process_block(matched_stmt, true, false)
+                    {
+                        Ok(res) => res,
+                        Err(err) => {
+                            return Err(RuntimeError::Custom(err.to_string().into()));
+                        }
+                    };
+                    drop(sem_context);
 
-            let ir_context = crate::Context::new();
-            let chunk = ir_context.emit(processed_block);
-            Ok(chunk)
-        } else {
-            Err(RuntimeError::Custom("no statement found".into()))
+                    let ir_context = crate::Context::new();
+                    let chunk = ir_context.emit(processed_block);
+                    Ok(chunk)
+                } else {
+                    Err(RuntimeError::Custom("no statement found".into()))
+                }
+            }
+            Err(err) => Err(RuntimeError::Custom(err.to_string().into())),
         }
     }
 

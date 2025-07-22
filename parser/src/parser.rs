@@ -112,7 +112,6 @@ fn filter( token: &Token ) -> &TokenType {
 %token then_ TokenType::Then;
 %token until_ TokenType::Until;
 %token while_ TokenType::While;
-%eof TokenType::Eof;
 
 %start ChunkOrExpressions;
 
@@ -529,6 +528,30 @@ Exp(Expression)
     | lhs=Exp caret rhs=Exp {
         new_binary_node!(Pow, caret, lhs, rhs)
     }
+    ;
+
+BinaryOp(Token):
+    asterisk
+    | slash
+    | slashslash
+    | percent
+    | plus
+    | minus
+    | dotdot
+    | lessless
+    | greatergreater
+    | ampersand
+    | tilde
+    | pipe
+    | less
+    | lessequal
+    | greater
+    | greaterequal
+    | tildeequal
+    | equalequal
+    | and_
+    | or_
+    | caret
     ;
 
 
