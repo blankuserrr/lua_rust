@@ -65,8 +65,6 @@ pub enum TokenType {
     Then,
     Until,
     While,
-
-    Eof,
 }
 
 impl TokenType {
@@ -286,9 +284,6 @@ impl std::fmt::Display for TokenType {
             }
             Self::While => {
                 write!(f, "while")
-            }
-            Self::Eof => {
-                write!(f, "<eof>")
             }
         }
     }
