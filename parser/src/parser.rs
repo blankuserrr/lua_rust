@@ -530,30 +530,6 @@ Exp(Expression)
     }
     ;
 
-BinaryOp(Token):
-    asterisk
-    | slash
-    | slashslash
-    | percent
-    | plus
-    | minus
-    | dotdot
-    | lessless
-    | greatergreater
-    | ampersand
-    | tilde
-    | pipe
-    | less
-    | lessequal
-    | greater
-    | greaterequal
-    | tildeequal
-    | equalequal
-    | and_
-    | or_
-    | caret
-    ;
-
 
 TableConstructor(expression::ExprTable)
     : lbrace FieldList rbrace {
