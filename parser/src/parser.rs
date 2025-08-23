@@ -539,26 +539,9 @@ TableConstructor(expression::ExprTable)
     ;
 
 
-// one or more separated Fields
-FieldList1(Vec<expression::TableField>)
-    : FieldList1 FieldSep Field {
-        FieldList1.push(Field);
-        FieldList1
-    }
-    | Field {
-        vec![Field]
-    }
-    ;
-
 // zero or more separated Fields, with optional trailing separator
 FieldList(Vec<expression::TableField>)
-    : FieldList1 FieldSep? {
-        FieldList1
-    }
-    | {
-        vec![]
-    }
-    ;
+    : $sep( Field, FieldSep, * );
 
 Field(expression::TableField)
     : lbracket k=Exp rbracket! equal! v=Exp {
