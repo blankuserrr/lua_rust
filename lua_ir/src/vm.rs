@@ -364,10 +364,10 @@ impl LuaEnv {
         let idx = thread.data_stack.len() - i - 1;
         thread.data_stack.get(idx).unwrap().clone()
     }
-    pub(crate) fn borrow_running_thread(&self) -> std::cell::Ref<LuaThread> {
+    pub(crate) fn borrow_running_thread(&self) -> std::cell::Ref<'_, LuaThread> {
         self.running_thread().borrow()
     }
-    pub(crate) fn borrow_running_thread_mut(&self) -> std::cell::RefMut<LuaThread> {
+    pub(crate) fn borrow_running_thread_mut(&self) -> std::cell::RefMut<'_, LuaThread> {
         self.running_thread().borrow_mut()
     }
 
