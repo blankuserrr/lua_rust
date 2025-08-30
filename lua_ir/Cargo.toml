@@ -1,7 +1,7 @@
 [package]
 name = "lua_ir"
-version = "0.8.0"
-edition = "2021"
+version = "0.8.1"
+edition = "2024"
 license = "MIT OR Apache-2.0"
 description = "lua runtime and IR generation"
 repository = "https://github.com/ehwan/lua_rust"
